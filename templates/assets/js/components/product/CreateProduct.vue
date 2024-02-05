@@ -96,6 +96,8 @@
   </section>
 </template>
 
+
+
 <script>
 import vue2Dropzone from 'vue2-dropzone'
 import 'vue2-dropzone/dist/vue2Dropzone.min.css'
@@ -119,15 +121,12 @@ export default {
       product_sku: '',
       description: '',
       images: [],
-      product_variant: [
-        {
-          option: this.variants[0].id,
-          tags: []
-        }
-      ],
+      product_variant: [], // Initialize as an empty array
       product_variant_prices: [],
       dropzoneOptions: {
         url: 'https://httpbin.org/post',
+        maxFilesize: 25,
+        acceptedFiles: ".jpeg,.jpg,.png,.gif,.JPEG,.JPG,.PNG,.GIF,.pdf,.pub",
         thumbnailWidth: 150,
         maxFilesize: 0.5,
         // acceptedFiles: 'image/*', 
@@ -136,12 +135,10 @@ export default {
     }
   },
   methods: {
-    // it will push a new object into product variant
     newVariant() {
       let all_variants = this.variants.map(el => el.id)
       let selected_variants = this.product_variant.map(el => el.option);
       let available_variants = all_variants.filter(entry1 => !selected_variants.some(entry2 => entry1 == entry2))
-      // console.log(available_variants)
 
       this.product_variant.push({
         option: available_variants[0],
@@ -149,7 +146,6 @@ export default {
       })
     },
 
-    // check the variant and render all the combination
     checkVariant() {
       let tags = [];
       this.product_variant_prices = [];
@@ -166,7 +162,6 @@ export default {
       })
     },
 
-    // combination algorithm
     getCombn(arr, pre) {
       pre = pre || '';
       if (!arr.length) {
@@ -179,7 +174,6 @@ export default {
       return ans;
     },
 
-    // store product into database
     saveProduct() {
       let product = {
         title: this.product_name,
@@ -190,7 +184,6 @@ export default {
         product_variant_prices: this.product_variant_prices
       }
 
-
       axios.post('/product', product).then(response => {
         console.log(response.data);
       }).catch(error => {
@@ -199,8 +192,19 @@ export default {
 
       console.log(product);
     }
-
-
+  },
+  watch: {
+    variants: {
+      handler(newVal, oldVal) {
+        if (newVal && newVal.length > 0) {
+          this.product_variant = [{
+            option: newVal[0].id,
+            tags: []
+          }];
+        }
+      },
+      immediate: true
+    }
   },
   mounted() {
     console.log('Component mounted.')
